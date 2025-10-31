@@ -1,0 +1,11 @@
+{
+  "name": "BRM Desarrollador - Backend",
+  "version": "1.0.0",
+  "description": "Documentación de la API del sistema de inventario y compras",
+  "title": "BRM Desarrollador - Backend",
+  "url": "http://localhost:3000/api/v1",
+  "sampleUrl": "http://localhost:3000/api/v1",
+  "template": {
+    "forceLanguage": "es"
+  }
+}

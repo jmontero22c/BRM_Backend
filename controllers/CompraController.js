@@ -70,10 +70,12 @@ const createPurchase = async (req, res) => {
 
     // Obtener Compra completa con detalles
     const completePurchase = await Compra.findByPk(compra.id_compra, {
+      attributes: { exclude: ["createdAt", "updatedAt"] },
       include: [
         {
           model: DetalleCompra,
-          include: [Producto],
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+          include: [{ model: Producto, attributes: { exclude: ["createdAt", "updatedAt"] } }],
         },
       ],
     });
@@ -113,12 +115,13 @@ const getPurchaseHistory = async (req, res) => {
 //Obtener compra especifica
 const getPurchaseById = async (req, res) => {
   try {
+    const whereCondition = { id_compra: req.params.id };
+    if (req.user.rol === "Cliente") {
+      whereCondition.id_usuario = req.user.id_usuario;
+    }
+
     const compra = await Compra.findOne({
-      where: {
-        id_compra: req.params.id,
-        id_usuario:
-          req.user.rol === "Cliente" ? req.user.id_usuario : undefined,
-      },
+      where: whereCondition,
       include: [
         {
           model: DetalleCompra,

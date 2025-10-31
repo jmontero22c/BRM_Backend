@@ -3,6 +3,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/Productos');
 const purchaseRoutes = require('./routes/Purchases');
+const path = require('path');
 
 const app = express();
 
@@ -20,6 +21,9 @@ app.use((req, res, next) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/purchases', purchaseRoutes);
+
+//Documentacion
+app.use('/docs', express.static(path.resolve('apidoc')));
 
 // Error handler
 app.use((error, req, res, next) => {
