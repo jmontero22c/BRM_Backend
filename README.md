@@ -71,6 +71,24 @@ npm run dev
 |               | POST    | `/api/v1/purchases`         | Crear una nueva compra                         |
 |							  | GET     | `/api/v1/purchases/history` | Ver historial de productos comprados          |
 
+## 📘 Documentación de API
+
+El proyecto usa **apiDoc** para documentar todos los endpoints.
+
+### Generar la documentación:
+```bash
+npm run doc
+```
+
+### Ver la documentación:
+Abre el archivo:
+```
+apidoc/index.html
+```
+
+O si quieres puedes entrar a:
+> http://localhost:3000/docs
+
 ## 🗃️ Estructura de la Base de Datos
 
 ###  Tablas Principales
