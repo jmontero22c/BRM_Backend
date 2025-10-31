@@ -21,16 +21,6 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/purchases', purchaseRoutes);
 
-// Health check
-// app.get('/health', (req, res) => {
-//   res.json({ status: 'OK', timestamp: new Date().toISOString() });
-// });
-
-// // 404 handler
-// app.use('*', (req, res) => {
-//   res.status(404).json({ error: 'Ruta no encontrada' });
-// });
-
 // Error handler
 app.use((error, req, res, next) => {
   console.error('Error no manejado:', error);

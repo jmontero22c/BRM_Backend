@@ -11,50 +11,46 @@ const createPurchase = async (req, res) => {
     }
 
     const { items } = req.body;
-    let totalAmount = 0;
+    let totalCantidad = 0;
     const compraDetalles = [];
 
     // Verificar stock y calcular total
     for (const item of items) {
-      const product = await Producto.findByPk(item.id_producto, {
-        transaction,
-      });
+      const producto = await Producto.findByPk(item.id_producto, {transaction});
 
-      if (!product) {
+      if (!producto) {
         await transaction.rollback();
-        return res
-          .status(404)
-          .json({ error: `Producto con ID ${item.id_producto} no encontrado` });
+        return res.status(404).json({ error: `Producto con ID ${item.id_producto} no encontrado` });
       }
 
-      if (product.cantidad_disponible < item.cantidad) {
+      if (producto.cantidad_disponible < item.cantidad) {
         await transaction.rollback();
         return res.status(400).json({
-          error: `Stock insuficiente para el producto: ${product.nombre}. Stock disponible: ${product.cantidad_disponible}`,
+          error: `Stock insuficiente para el producto: ${producto.nombre}. Stock disponible: ${producto.cantidad_disponible}`,
         });
       }
 
-      const subtotal = product.precio * item.cantidad;
-      totalAmount += subtotal;
+      const subtotal = producto.precio * item.cantidad;
+      totalCantidad += subtotal;
 
       compraDetalles.push({
-        id_producto: product.id_producto,
+        id_producto: producto.id_producto,
         cantidad: item.cantidad,
-        precio_unitario: product.precio,
+        precio_unitario: producto.precio,
       });
 
       // Actualizar stock
-      await product.update(
-        { cantidad_disponible: product.cantidad_disponible - item.cantidad },
+      await producto.update(
+        { cantidad_disponible: producto.cantidad_disponible - item.cantidad },
         { transaction }
       );
     }
 
     // Crear compra
-    const purchase = await Compra.create(
+    const compra = await Compra.create(
       {
         id_usuario: req.user.id_usuario,
-        total_amount: totalAmount,
+        total: totalCantidad,
       },
       { transaction }
     );
@@ -64,7 +60,7 @@ const createPurchase = async (req, res) => {
       await DetalleCompra.create(
         {
           ...detail,
-          id_compra: purchase.id_compra,
+          id_compra: compra.id_compra,
         },
         { transaction }
       );
@@ -73,7 +69,7 @@ const createPurchase = async (req, res) => {
     await transaction.commit();
 
     // Obtener Compra completa con detalles
-    const completePurchase = await Compra.findByPk(purchase.id_compra, {
+    const completePurchase = await Compra.findByPk(compra.id_compra, {
       include: [
         {
           model: DetalleCompra,
@@ -88,7 +84,7 @@ const createPurchase = async (req, res) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error("Error al crear purchase:", error);
+    console.error("Error al crear compra:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
@@ -96,8 +92,8 @@ const createPurchase = async (req, res) => {
 //Historial de compras
 const getPurchaseHistory = async (req, res) => {
   try {
-    const purchases = await Compra.findAll({
-      where: { id_usuario: req.params.id_usuario },
+    const compras = await Compra.findAll({
+      where: { id_usuario: req.user.id_usuario },
       include: [
         {
           model: DetalleCompra,
@@ -107,7 +103,7 @@ const getPurchaseHistory = async (req, res) => {
       order: [["fecha_compra", "DESC"]],
     });
 
-    res.json(purchases);
+    res.json(compras);
   } catch (error) {
     console.error("Error al obtener historial:", error);
     res.status(500).json({ error: "Error interno del servidor" });
@@ -117,7 +113,7 @@ const getPurchaseHistory = async (req, res) => {
 //Obtener compra especifica
 const getPurchaseById = async (req, res) => {
   try {
-    const purchase = await Compra.findOne({
+    const compra = await Compra.findOne({
       where: {
         id_compra: req.params.id,
         id_usuario:
@@ -135,11 +131,11 @@ const getPurchaseById = async (req, res) => {
       ],
     });
 
-    if (!purchase) {
+    if (!compra) {
       return res.status(404).json({ error: "Compra no encontrada" });
     }
 
-    res.json(purchase);
+    res.json(compra);
   } catch (error) {
     console.error("Error al obtener compra:", error);
     res.status(500).json({ error: "Error interno del servidor" });
@@ -149,21 +145,28 @@ const getPurchaseById = async (req, res) => {
 // Obtener todas las compras (Solo para administradores)
 const getAllPurchases = async (req, res) => {
   try {
-    const purchases = await Compra.findAll({
+    const compras = await Compra.findAll({
+      attributes: ["fecha_compra", "total"],
       include: [
         {
           model: DetalleCompra,
-          include: [Producto],
+          include: [
+            {
+              model: Producto,
+              attributes: { exclude: ["createdAt", "updatedAt"] },
+            },
+          ],
+          attributes: ["cantidad"],
         },
         {
           model: Usuario,
-          attributes: ["id_usuario", "email", "rol"],
+          attributes: ["email", "nombre", "rol"],
         },
       ],
       order: [["fecha_compra", "DESC"]],
     });
 
-    res.json(purchases);
+    res.json(compras);
   } catch (error) {
     console.error("Error al obtener todas las compras:", error);
     res.status(500).json({ error: "Error interno del servidor" });

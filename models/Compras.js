@@ -18,12 +18,12 @@ Compra.init(
         key: "id_usuario",
       },
     },
-    purchase_date: {
+    fecha_compra: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    total_amount: {
+    total: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {

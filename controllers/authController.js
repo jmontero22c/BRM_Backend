@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { Usuario } = require('../models');
 const { registroValidacion, loginValidacion } = require('../middleware/validacion');
 
-const registro = async (req, res) => {
+const registrarUsuario = async (req, res) => {
   try {
     const { error } = registroValidacion(req.body);
     if (error) {
@@ -16,7 +16,7 @@ const registro = async (req, res) => {
       return res.status(400).json({ error: 'El email ya está registrado' });
     }
 
-    const usuario = await Usuario.create({
+    const nuevoUsuario = await Usuario.create({
       nombre,
       email,
       password,
@@ -24,7 +24,7 @@ const registro = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { id_usuario: usuario.id_usuario, rol: usuario.rol },
+      { id_usuario: nuevoUsuario.id_usuario, rol: nuevoUsuario.rol },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -33,10 +33,10 @@ const registro = async (req, res) => {
       message: 'Usuario registrado exitosamente',
       token,
       usuario: {
-        id_usuario: usuario.id_usuario,
-        email: usuario.email,
-        rol: usuario.rol,
-        nombre: usuario.nombre
+        id_usuario: nuevoUsuario.id_usuario,
+        nombre: nuevoUsuario.nombre,
+        email: nuevoUsuario.email,
+        rol: nuevoUsuario.rol
       }
     });
   } catch (error) {
@@ -45,7 +45,7 @@ const registro = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+const iniciarSesion = async (req, res) => {
   try {
     const { error } = loginValidacion(req.body);
     if (error) {
@@ -54,33 +54,34 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await Usuario.findOne({ where: { email } });
-    if (!user) {
-      return res.status(400).json({ error: 'El correo electronico no existe.' });
+    const usuario = await Usuario.findOne({ where: { email } });
+    if (!usuario) {
+      return res.status(400).json({ error: 'El correo electrónico no está registrado' });
     }
 
-    const isValidPassword = user.validatePassword(password);
+    const isValidPassword = usuario.validatePassword(password);
     if (!isValidPassword) {
-      return res.status(400).json({ error: 'Contraseña Incorrecta.' });
+      return res.status(400).json({ error: 'Contraseña incorrecta' });
     }
 
     const token = jwt.sign(
       { 
-        id_usuario: user.id_usuario, 
-        email: user.email, 
-        rol: user.rol 
+        id_usuario: usuario.id_usuario, 
+        email: usuario.email, 
+        rol: usuario.rol 
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.json({
-      message: 'Login exitoso',
+    res.status(200).json({
+      message: 'Inicio de sesión exitoso',
       token,
-      user: {
-        id_usuario: user.id_usuario,
-        email: user.email,
-        rol: user.rol
+      usuario: {
+        id_usuario: usuario.id_usuario,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
       }
     });
   } catch (error) {
@@ -89,4 +90,4 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { registro, login };
+module.exports = { registrarUsuario, iniciarSesion };
