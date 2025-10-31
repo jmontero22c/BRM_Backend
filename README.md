@@ -23,7 +23,7 @@ API REST para un sistema de inventario y compras, desarrollada con Node.j + Expr
 #### 1. Clonar el repositorio:
 ```bash
 git clone https://github.com/jmontero22c/BRM_Backend
-cd API_BRM
+cd BRM_Backend
 ```
   
   #### 2. Instalar dependencias:
